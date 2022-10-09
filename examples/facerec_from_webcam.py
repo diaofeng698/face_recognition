@@ -1,7 +1,7 @@
 import face_recognition
 import cv2
 import numpy as np
-
+import time
 # This is a super simple (but slow) example of running face recognition on live video from your webcam.
 # There's a second example that's a little more complicated but runs faster.
 
@@ -20,19 +20,37 @@ obama_face_encoding = face_recognition.face_encodings(obama_image)[0]
 biden_image = face_recognition.load_image_file("biden.jpg")
 biden_face_encoding = face_recognition.face_encodings(biden_image)[0]
 
+diaofeng_image = face_recognition.load_image_file("diaofeng.jpeg")
+diaofeng_face_encoding = face_recognition.face_encodings(diaofeng_image)[0]
+print("Face Key Point Matrix : ")
+print(diaofeng_face_encoding)
+print("Face Key Point Num : ")
+print(len(diaofeng_face_encoding))
+
+chuanchuan_image = face_recognition.load_image_file("chuanchuan.jpeg")
+chuanchuan_face_encoding = face_recognition.face_encodings(chuanchuan_image)[0]
+
 # Create arrays of known face encodings and their names
 known_face_encodings = [
     obama_face_encoding,
-    biden_face_encoding
+    biden_face_encoding,
+    diaofeng_face_encoding,
+    chuanchuan_face_encoding
 ]
 known_face_names = [
     "Barack Obama",
-    "Joe Biden"
+    "Joe Biden",
+    "diaofeng",
+    "chuanchuan"
+
 ]
+
 
 while True:
     # Grab a single frame of video
     ret, frame = video_capture.read()
+    # 记录该帧开始处理的时间
+    start_time = time.time()
 
     # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
     rgb_frame = frame[:, :, ::-1]
@@ -44,6 +62,7 @@ while True:
     # Loop through each face in this frame of video
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         # See if the face is a match for the known face(s)
+        # 数据库中的人脸特征与当前帧中的人脸特征进行比对
         matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
 
         name = "Unknown"
@@ -54,7 +73,10 @@ while True:
         #     name = known_face_names[first_match_index]
 
         # Or instead, use the known face with the smallest distance to the new face
+        # 计算欧式距离
         face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        print(len(face_distances))
+        print(face_distances)
         best_match_index = np.argmin(face_distances)
         if matches[best_match_index]:
             name = known_face_names[best_match_index]
@@ -66,6 +88,13 @@ while True:
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+
+    # 记录该帧处理完毕的时间
+    end_time = time.time()
+    # 计算每秒处理图像帧数FPS
+    FPS = 1/(end_time - start_time)
+    # print("FPS: ", FPS)
+    frame = cv2.putText(frame, 'FPS  '+str(int(FPS)), (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.25, (255, 0, 255), 2)
 
     # Display the resulting image
     cv2.imshow('Video', frame)

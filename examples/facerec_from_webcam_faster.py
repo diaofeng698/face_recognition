@@ -1,7 +1,7 @@
 import face_recognition
 import cv2
 import numpy as np
-
+import time
 # This is a demo of running face recognition on live video from your webcam. It's a little more complicated than the
 # other example, but it includes some basic performance tweaks to make things run a lot faster:
 #   1. Process each video frame at 1/4 resolution (though still display it at full resolution)
@@ -22,14 +22,19 @@ obama_face_encoding = face_recognition.face_encodings(obama_image)[0]
 biden_image = face_recognition.load_image_file("biden.jpg")
 biden_face_encoding = face_recognition.face_encodings(biden_image)[0]
 
+diaofeng_image = face_recognition.load_image_file("diaofeng.jpeg")
+diaofeng_face_encoding = face_recognition.face_encodings(diaofeng_image)[0]
+
 # Create arrays of known face encodings and their names
 known_face_encodings = [
     obama_face_encoding,
-    biden_face_encoding
+    biden_face_encoding,
+    diaofeng_face_encoding
 ]
 known_face_names = [
     "Barack Obama",
-    "Joe Biden"
+    "Joe Biden",
+    "diaofeng"
 ]
 
 # Initialize some variables
@@ -42,6 +47,9 @@ while True:
     # Grab a single frame of video
     ret, frame = video_capture.read()
 
+    # 记录该帧开始处理的时间
+    start_time = time.time()
+
     # Only process every other frame of video to save time
     if process_this_frame:
         # Resize frame of video to 1/4 size for faster face recognition processing
@@ -49,7 +57,7 @@ while True:
 
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         rgb_small_frame = small_frame[:, :, ::-1]
-        
+
         # Find all the faces and face encodings in the current frame of video
         face_locations = face_recognition.face_locations(rgb_small_frame)
         face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
@@ -73,8 +81,13 @@ while True:
 
             face_names.append(name)
 
-    process_this_frame = not process_this_frame
-
+    # process_this_frame = not process_this_frame
+    # 记录该帧处理完毕的时间
+    end_time = time.time()
+    # 计算每秒处理图像帧数FPS
+    FPS = 1/(end_time - start_time)
+    # print("FPS: ", FPS)
+    frame = cv2.putText(frame, 'FPS  '+str(int(FPS)), (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.25, (255, 0, 255), 2)
 
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
